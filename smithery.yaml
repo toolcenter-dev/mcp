@@ -1,0 +1,27 @@
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    required:
+      - toolcenterApiKey
+    properties:
+      toolcenterApiKey:
+        type: string
+        description: >-
+          Your ToolCenter API key. Get one free at https://toolcenter.dev
+          (100 calls/month on the free tier).
+      toolcenterBaseUrl:
+        type: string
+        default: https://api.toolcenter.dev
+        description: >-
+          Base URL for the ToolCenter API. Change this only if you self-host
+          ToolCenter on your own infrastructure.
+  commandFunction: |-
+    (config) => ({
+      command: 'npx',
+      args: ['-y', 'toolcenter-mcp'],
+      env: {
+        TOOLCENTER_API_KEY: config.toolcenterApiKey,
+        TOOLCENTER_BASE_URL: config.toolcenterBaseUrl || 'https://api.toolcenter.dev'
+      }
+    })
