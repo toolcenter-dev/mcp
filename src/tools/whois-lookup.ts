@@ -6,14 +6,20 @@ import { joinSections, kv, section } from "../adapters/format.js";
 
 interface WhoisResponse {
   domain?: string;
+  tld?: string;
+  is_registered?: boolean;
   registrar?: string;
-  createdDate?: string;
-  updatedDate?: string;
-  expiresDate?: string;
-  nameServers?: string[];
+  registrar_url?: string;
+  registrar_whois_server?: string;
+  dates?: { created?: string; expires?: string; updated?: string };
+  domain_age?: { human?: string; years?: number; months?: number; total_days?: number };
+  days_until_expiry?: number;
+  name_servers?: string[];
   status?: string[];
+  status_codes?: string[];
   dnssec?: string;
-  owner?: { name?: string; organization?: string; country?: string; email?: string };
+  registrant?: { organization?: string | null; country?: string | null; state?: string | null; email?: string | null };
+  abuse_contact?: string;
   raw?: string;
 }
 
@@ -33,25 +39,43 @@ export function registerWhoisLookup(server: McpServer, client: ToolCenterClient)
     async ({ domain }) => {
       try {
         const data = await client.request<WhoisResponse>("/v1/whois", { body: { domain } });
+        if (data.is_registered === false) {
+          return { content: [{ type: "text", text: `# WHOIS — ${data.domain ?? domain}\n\n✅ **Domain is available** (not registered).` }] };
+        }
         const registration = section("Registration", [
           kv("Domain", data.domain ?? domain),
+          kv("TLD", data.tld),
           kv("Registrar", data.registrar),
-          kv("Created", data.createdDate),
-          kv("Updated", data.updatedDate),
-          kv("Expires", data.expiresDate),
+          kv("Registrar URL", data.registrar_url),
+          kv("WHOIS server", data.registrar_whois_server),
+          kv("Created", data.dates?.created),
+          kv("Updated", data.dates?.updated),
+          kv("Expires", data.dates?.expires),
+          kv("Days until expiry", data.days_until_expiry),
+          kv("Age", data.domain_age?.human),
           kv("DNSSEC", data.dnssec),
-          kv("Status", data.status),
-          kv("Name servers", data.nameServers),
+          kv("Abuse contact", data.abuse_contact),
         ]);
-        const owner = data.owner
-          ? section("Owner", [
-              kv("Name", data.owner.name),
-              kv("Organization", data.owner.organization),
-              kv("Country", data.owner.country),
-              kv("Email", data.owner.email),
+        const ns = data.name_servers?.length
+          ? section(`Name servers (${data.name_servers.length})`, data.name_servers.map((s) => `- ${s}`))
+          : "";
+        const statusCodes = data.status_codes?.length
+          ? section("Status codes", data.status_codes.map((s) => `- ${s}`))
+          : "";
+        const registrant = data.registrant && Object.values(data.registrant).some((v) => v)
+          ? section("Registrant", [
+              kv("Organization", data.registrant.organization ?? undefined),
+              kv("Country", data.registrant.country ?? undefined),
+              kv("State", data.registrant.state ?? undefined),
+              kv("Email", data.registrant.email ?? undefined),
             ])
           : "";
-        return { content: [{ type: "text", text: joinSections(`# WHOIS — ${data.domain ?? domain}`, registration, owner) || "No WHOIS data." }] };
+        return {
+          content: [{
+            type: "text",
+            text: joinSections(`# WHOIS — ${data.domain ?? domain}`, registration, ns, statusCodes, registrant) || "No WHOIS data.",
+          }],
+        };
       } catch (err) {
         return { content: [{ type: "text", text: formatToolError(err) }], isError: true };
       }
