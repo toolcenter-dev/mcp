@@ -3,6 +3,15 @@
   "version": "0.1.0",
   "description": "The Swiss-Army MCP server for web tools — one install, 15 LLM-ready tools: web search, scraping, screenshots, SEO/a11y audits, DNS/WHOIS/SSL, and more.",
   "license": "MIT",
+  "author": "ToolCenter <dev@chmesa.com> (https://toolcenter.dev)",
+  "homepage": "https://github.com/toolcenter-dev/mcp#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/toolcenter-dev/mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/toolcenter-dev/mcp/issues"
+  },
   "type": "module",
   "bin": {
     "toolcenter-mcp": "dist/index.js"
