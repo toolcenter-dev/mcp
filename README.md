@@ -94,8 +94,8 @@ The agent will chain `web_search` → `scrape_url` → `detect_tech_stack` → `
 ## Development
 
 ```bash
-git clone https://github.com/toolcenter/toolcenter-mcp
-cd toolcenter-mcp
+git clone https://github.com/toolcenter-dev/mcp
+cd mcp
 npm install
 cp .env.example .env   # add your key
 npm run build
