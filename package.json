@@ -1,0 +1,49 @@
+{
+  "name": "toolcenter-mcp",
+  "version": "0.1.0",
+  "description": "The Swiss-Army MCP server for web tools — one install, 15 LLM-ready tools: web search, scraping, screenshots, SEO/a11y audits, DNS/WHOIS/SSL, and more.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "toolcenter-mcp": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "claude",
+    "ai-agent",
+    "web-search",
+    "scraping",
+    "screenshot",
+    "seo",
+    "toolcenter"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@mozilla/readability": "^0.5.0",
+    "jsdom": "^25.0.1",
+    "turndown": "^7.2.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^21.1.7",
+    "@types/node": "^22.9.0",
+    "@types/turndown": "^5.0.5",
+    "typescript": "^5.7.2"
+  }
+}
