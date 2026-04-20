@@ -4,11 +4,13 @@ import type { ToolCenterClient } from "../client.js";
 import { formatToolError } from "../errors.js";
 
 interface StoreResponse {
+  status?: string;
   url?: string;
-  hash?: string;
-  mime?: string;
-  size?: number;
-  error?: string;
+  storage_url?: string;
+  mime_type?: string;
+  file_size?: number;
+  expires_at?: string;
+  cached?: boolean;
 }
 
 export function registerScreenshot(server: McpServer, client: ToolCenterClient) {
@@ -63,15 +65,17 @@ export function registerScreenshot(server: McpServer, client: ToolCenterClient) 
         }
         const lines = [
           `Screenshot saved: ${data.url}`,
-          data.mime ? `Format: ${data.mime}` : null,
-          data.size ? `Size: ${(data.size / 1024).toFixed(1)} KB` : null,
+          data.mime_type ? `Format: ${data.mime_type}` : null,
+          data.file_size ? `Size: ${(data.file_size / 1024).toFixed(1)} KB` : null,
+          data.expires_at ? `Expires: ${data.expires_at}` : null,
+          data.cached ? "(served from cache)" : null,
         ]
           .filter(Boolean)
           .join("\n");
         return {
           content: [
             { type: "text", text: lines },
-            { type: "resource_link", uri: data.url, name: "screenshot", mimeType: data.mime ?? "image/png" },
+            { type: "resource_link", uri: data.url, name: "screenshot", mimeType: data.mime_type ?? "image/png" },
           ],
         };
       } catch (err) {

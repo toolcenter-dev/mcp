@@ -4,10 +4,13 @@ import type { ToolCenterClient } from "../client.js";
 import { formatToolError } from "../errors.js";
 
 interface StoreResponse {
+  status?: string;
   url?: string;
-  hash?: string;
-  mime?: string;
-  size?: number;
+  storage_url?: string;
+  mime_type?: string;
+  file_size?: number;
+  expires_at?: string;
+  cached?: boolean;
 }
 
 export function registerUrlToPdf(server: McpServer, client: ToolCenterClient) {
@@ -37,12 +40,16 @@ export function registerUrlToPdf(server: McpServer, client: ToolCenterClient) {
         if (!data.url) {
           return { content: [{ type: "text", text: `PDF succeeded but no URL: ${JSON.stringify(data)}` }] };
         }
+        const meta = [
+          data.file_size ? `Size: ${(data.file_size / 1024).toFixed(1)} KB` : null,
+          data.expires_at ? `Expires: ${data.expires_at}` : null,
+          data.cached ? "(served from cache)" : null,
+        ]
+          .filter(Boolean)
+          .join("\n");
         return {
           content: [
-            {
-              type: "text",
-              text: `PDF saved: ${data.url}${data.size ? `\nSize: ${(data.size / 1024).toFixed(1)} KB` : ""}`,
-            },
+            { type: "text", text: `PDF saved: ${data.url}${meta ? `\n${meta}` : ""}` },
             { type: "resource_link", uri: data.url, name: "document.pdf", mimeType: "application/pdf" },
           ],
         };
