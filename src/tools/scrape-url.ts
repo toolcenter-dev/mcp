@@ -6,10 +6,15 @@ import { htmlToCleanMarkdown, plainTextToMarkdown } from "../adapters/markdown.j
 
 interface ScrapeResponse {
   url?: string;
-  text?: string;
-  html?: string;
   title?: string;
-  data?: Record<string, unknown>;
+  lang?: string | null;
+  content?: string;
+  word_count?: number;
+  headings?: { level: number; tag: string; text: string }[];
+  links?: { count: number; items: { url: string; text: string }[] };
+  images?: { count: number; items: unknown[] };
+  type?: string;
+  meta?: Record<string, string>;
 }
 
 export function registerScrapeUrl(server: McpServer, client: ToolCenterClient) {
@@ -40,23 +45,25 @@ export function registerScrapeUrl(server: McpServer, client: ToolCenterClient) {
           timeoutMs: 45_000,
         });
 
-        const html = data.html ?? (typeof data.text === "string" ? data.text : "");
-        if (!html) {
-          return { content: [{ type: "text", text: plainTextToMarkdown(JSON.stringify(data, null, 2)) }] };
+        const raw = data.content ?? "";
+        // When format=html the content is full HTML; pipe through Readability+Turndown.
+        if (raw && /<[a-z][\s\S]*>/i.test(raw)) {
+          const extracted = htmlToCleanMarkdown(raw, url);
+          const header = [
+            `# ${extracted.title ?? data.title ?? url}`,
+            extracted.byline ? `_By ${extracted.byline}_` : null,
+            extracted.siteName ? `_Source: ${extracted.siteName}_` : null,
+            `_URL: ${data.url ?? url}_`,
+            data.word_count ? `_~${data.word_count} words_` : null,
+          ]
+            .filter(Boolean)
+            .join("\n");
+          return { content: [{ type: "text", text: [header, "", extracted.markdown].join("\n") }] };
         }
 
-        const extracted = htmlToCleanMarkdown(html, url);
-        const header = [
-          `# ${extracted.title ?? url}`,
-          extracted.byline ? `_By ${extracted.byline}_` : null,
-          extracted.siteName ? `_Source: ${extracted.siteName}_` : null,
-          `_URL: ${url}_`,
-        ]
-          .filter(Boolean)
-          .join("\n");
-
-        const body = [header, "", extracted.markdown].join("\n");
-        return { content: [{ type: "text", text: body }] };
+        // Fallback: no HTML, just text content.
+        const header = `# ${data.title ?? url}\n_URL: ${data.url ?? url}_${data.word_count ? `\n_~${data.word_count} words_` : ""}`;
+        return { content: [{ type: "text", text: `${header}\n\n${plainTextToMarkdown(raw || JSON.stringify(data, null, 2))}` }] };
       } catch (err) {
         return { content: [{ type: "text", text: formatToolError(err) }], isError: true };
       }

@@ -6,15 +6,22 @@ import { joinSections, kv, section } from "../adapters/format.js";
 
 interface StatusResponse {
   url?: string;
-  up?: boolean;
-  status?: number;
-  statusText?: string;
-  responseTimeMs?: number;
-  ip?: string;
-  server?: string;
-  headers?: Record<string, string>;
-  redirects?: { url: string; status: number }[];
-  finalUrl?: string;
+  final_url?: string | null;
+  is_up?: boolean;
+  status_code?: number;
+  status_text?: string;
+  method?: string;
+  ip_address?: string | null;
+  port?: number | null;
+  is_https?: boolean;
+  http_version?: string | null;
+  content_type?: string | null;
+  content_size?: number | null;
+  server?: string | null;
+  powered_by?: string | null;
+  timing?: { dns_ms?: number; connect_ms?: number; tls_ms?: number; ttfb_ms?: number; total_ms?: number };
+  redirect_count?: number;
+  redirect_chain?: string[] | null;
   error?: string;
 }
 
@@ -33,18 +40,24 @@ export function registerCheckStatus(server: McpServer, client: ToolCenterClient)
     async ({ url }) => {
       try {
         const data = await client.request<StatusResponse>("/v1/status", { body: { url } });
-        const emoji = data.up ? "✅" : "❌";
+        const emoji = data.is_up ? "✅" : "❌";
         const main = section("Status", [
-          `**Result:** ${emoji} ${data.up ? "UP" : "DOWN"}`,
-          kv("Status", `${data.status ?? "?"} ${data.statusText ?? ""}`.trim()),
-          kv("Response time", data.responseTimeMs !== undefined ? `${data.responseTimeMs}ms` : undefined),
-          kv("IP", data.ip),
-          kv("Server", data.server),
-          kv("Final URL", data.finalUrl),
+          `**Result:** ${emoji} ${data.is_up ? "UP" : "DOWN"}`,
+          kv("Status", `${data.status_code ?? "?"} ${data.status_text ?? ""}`.trim()),
+          kv("Method", data.method),
+          kv("Response time", data.timing?.total_ms !== undefined ? `${data.timing.total_ms}ms (TTFB ${data.timing.ttfb_ms ?? "?"}ms)` : undefined),
+          kv("IP", data.ip_address ?? undefined),
+          kv("HTTP", data.http_version),
+          kv("HTTPS", data.is_https !== undefined ? (data.is_https ? "yes" : "no") : undefined),
+          kv("Server", data.server ?? undefined),
+          kv("Powered by", data.powered_by ?? undefined),
+          kv("Content-Type", data.content_type ?? undefined),
+          kv("Content size", data.content_size !== undefined && data.content_size !== null ? `${data.content_size} bytes` : undefined),
+          kv("Final URL", data.final_url ?? undefined),
           data.error ? kv("Error", data.error) : "",
         ]);
-        const redirects = data.redirects?.length
-          ? section("Redirects", data.redirects.map((r) => `- [${r.status}] ${r.url}`))
+        const redirects = data.redirect_chain?.length
+          ? section(`Redirects (${data.redirect_count ?? data.redirect_chain.length})`, data.redirect_chain.map((u) => `- ${u}`))
           : "";
         return { content: [{ type: "text", text: joinSections(`# URL check — ${data.url ?? url}`, main, redirects) }] };
       } catch (err) {
