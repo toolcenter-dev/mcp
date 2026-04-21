@@ -11,7 +11,7 @@ async function main() {
 
   const server = new McpServer({
     name: "toolcenter-mcp",
-    version: "0.1.0",
+    version: "0.1.4",
   });
 
   registerAllTools(server, client);
