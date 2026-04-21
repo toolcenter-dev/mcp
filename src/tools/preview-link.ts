@@ -10,10 +10,10 @@ interface LinkPreviewResponse {
   description?: string;
   image?: string;
   favicon?: string;
-  siteName?: string;
+  site_name?: string;
   type?: string;
   author?: string;
-  publishedAt?: string;
+  published_at?: string;
 }
 
 export function registerPreviewLink(server: McpServer, client: ToolCenterClient) {
@@ -35,10 +35,10 @@ export function registerPreviewLink(server: McpServer, client: ToolCenterClient)
         const header = `# ${data.title ?? url}`;
         const info = section("Preview", [
           kv("URL", data.url ?? url),
-          kv("Site", data.siteName),
+          kv("Site", data.site_name),
           kv("Type", data.type),
           kv("Author", data.author),
-          kv("Published", data.publishedAt),
+          kv("Published", data.published_at),
           kv("Image", data.image),
           kv("Favicon", data.favicon),
         ]);

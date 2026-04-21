@@ -19,7 +19,7 @@ interface DnsResponse {
   domain?: string;
   type?: string;
   records?: DnsRecord[] | Record<string, DnsRecord[]>;
-  lookupTime?: number;
+  lookup_time?: number;
 }
 
 export function registerDnsLookup(server: McpServer, client: ToolCenterClient) {
@@ -43,7 +43,7 @@ export function registerDnsLookup(server: McpServer, client: ToolCenterClient) {
       try {
         const data = await client.request<DnsResponse>("/v1/dns", { body: { domain, type: type ?? "ALL" } });
         const lines = [`# DNS — ${data.domain ?? domain}`];
-        if (data.lookupTime) lines.push(`_Lookup: ${data.lookupTime}ms_`);
+        if (data.lookup_time) lines.push(`_Lookup: ${data.lookup_time}ms_`);
 
         const records = data.records;
         if (!records) {

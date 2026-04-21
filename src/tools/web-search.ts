@@ -10,14 +10,14 @@ interface SearchResult {
   url: string | null;
   snippet: string | null;
   engine?: string | null;
-  publishedAt?: string | null;
+  published_at?: string | null;
 }
 
 interface SearchResponse {
   query: string;
   category: string;
-  totalResults: number;
-  returnedResults: number;
+  total_results: number;
+  returned_results: number;
   results: SearchResult[];
   suggestions?: string[];
   corrections?: string[];
@@ -57,14 +57,14 @@ export function registerWebSearch(server: McpServer, client: ToolCenterClient) {
         if (data.results.length === 0) {
           lines.push("\n_No results._");
         } else {
-          lines.push(`\n_${data.returnedResults} results_\n`);
+          lines.push(`\n_${data.returned_results} results_\n`);
           for (const r of data.results) {
             lines.push(`## ${r.position}. ${r.title ?? "(no title)"}`);
             if (r.url) lines.push(`<${r.url}>`);
             if (r.snippet) lines.push(r.snippet);
             const meta: string[] = [];
             if (r.engine) meta.push(`source: ${r.engine}`);
-            if (r.publishedAt) meta.push(`published: ${r.publishedAt}`);
+            if (r.published_at) meta.push(`published: ${r.published_at}`);
             if (meta.length) lines.push(`_${meta.join(" · ")}_`);
             lines.push("");
           }

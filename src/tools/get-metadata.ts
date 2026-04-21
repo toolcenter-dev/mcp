@@ -19,7 +19,7 @@ interface MetadataResponse {
   viewport?: string;
   robots?: string;
   image?: string;
-  siteName?: string;
+  site_name?: string;
 }
 
 export function registerGetMetadata(server: McpServer, client: ToolCenterClient) {
@@ -41,7 +41,7 @@ export function registerGetMetadata(server: McpServer, client: ToolCenterClient)
         const core = section("Core", [
           kv("Title", data.title),
           kv("Description", data.description),
-          kv("Site", data.siteName),
+          kv("Site", data.site_name),
           kv("Author", data.author),
           kv("Language", data.lang),
           kv("Canonical", data.canonical),
