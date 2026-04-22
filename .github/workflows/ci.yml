@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Nightly e2e against production
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build + smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - run: npx tsc
+      - name: MCP handshake smoke test
+        run: |
+          chmod +x dist/index.js
+          TOOLCENTER_API_KEY=tc_dummy timeout 10 node dist/index.js <<'EOF' | tee /tmp/mcp-out
+          {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"ci","version":"0"}}}
+          {"jsonrpc":"2.0","id":2,"method":"tools/list"}
+          EOF
+          grep -q '"tools":\[' /tmp/mcp-out
+          # Expect 15 registered tools
+          TOOL_COUNT=$(grep -oE '"name":"[a-z_]+"' /tmp/mcp-out | sort -u | wc -l)
+          test "$TOOL_COUNT" -eq 15 || { echo "Expected 15 tools, got $TOOL_COUNT"; exit 1; }
+          echo "✅ MCP handshake OK, 15 tools registered"
+
+  e2e:
+    name: E2E against production
+    runs-on: ubuntu-latest
+    # Only run on schedule (nightly) + manual dispatch. Not on every PR to avoid burning
+    # quota on the shared e2e account.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - run: npx tsc
+      - name: Run full E2E (mail.tm signup → 15 tools against prod)
+        run: node scripts/e2e.mjs --local

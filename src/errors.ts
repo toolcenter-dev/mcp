@@ -1,3 +1,5 @@
+import * as Sentry from "@sentry/node";
+
 export class ToolCenterError extends Error {
   constructor(
     message: string,
@@ -10,6 +12,8 @@ export class ToolCenterError extends Error {
 }
 
 export function formatToolError(err: unknown): string {
+  if (process.env.SENTRY_DSN) Sentry.captureException(err);
+
   if (err instanceof ToolCenterError) {
     const parts = [err.message];
     if (err.status) parts.push(`HTTP ${err.status}`);
