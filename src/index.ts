@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import * as Sentry from "@sentry/node";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { loadConfig } from "./config.js";
@@ -8,14 +7,6 @@ import { registerAllTools } from "./tools/index.js";
 
 
 // Optional error tracking — only active if SENTRY_DSN is set in env.
-if (process.env.SENTRY_DSN) {
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN,
-    tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? 0.1),
-    release: `toolcenter-mcp@0.1.6`,
-  });
-}
-
 async function main() {
   const config = loadConfig();
   const client = new ToolCenterClient(config);
