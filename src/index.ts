@@ -12,7 +12,7 @@ if (process.env.SENTRY_DSN) {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
     tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? 0.1),
-    release: `toolcenter-mcp@0.1.5`,
+    release: `toolcenter-mcp@0.1.6`,
   });
 }
 
@@ -22,7 +22,7 @@ async function main() {
 
   const server = new McpServer({
     name: "toolcenter-mcp",
-    version: "0.1.5",
+    version: "0.1.6",
   });
 
   registerAllTools(server, client);
@@ -34,7 +34,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  if (process.env.SENTRY_DSN) Sentry.captureException(err);
   process.stderr.write(`Fatal: ${err instanceof Error ? err.stack ?? err.message : String(err)}\n`);
   process.exit(1);
 });
