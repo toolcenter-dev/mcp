@@ -6,14 +6,13 @@ import { ToolCenterClient } from "./client.js";
 import { registerAllTools } from "./tools/index.js";
 
 
-// Optional error tracking — only active if SENTRY_DSN is set in env.
 async function main() {
   const config = loadConfig();
   const client = new ToolCenterClient(config);
 
   const server = new McpServer({
     name: "toolcenter-mcp",
-    version: "0.1.6",
+    version: "0.1.7",
   });
 
   registerAllTools(server, client);
